@@ -1,4 +1,5 @@
 import pandas as pd
+
 from gen_building_class import Building
 from OUT_functions.output_predict2 import load_models, predict_heating, heating_consumption, predict_cooling, cooling_consumption, predict_overheat_underheat
 from INP_idf_functions.woon_functions_distr2 import map_archetype

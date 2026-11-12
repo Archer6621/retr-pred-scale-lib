@@ -4,15 +4,12 @@ from INP_idf_functions.get_retrofit_data2 import get_initial_r_values
 from INP_idf_functions.dbn_functions2 import initial_prob_distributions_per_input, get_prob_distributions_one_year, get_samples, sample_ageing_one_year
 
 def make_geometry_idf_sample_distr(bag_pand_id, n_sim):
-    
     building = Building()
     building.bag_adres_id = building.get_bag_adres_id(bag_pand_id)
     
     building.fixed_initial_values() 
     building.load_building_data(building.bag_adres_id)
-    
     idf=building.initiate_idf()
-
     idf.save()
 
     probs_path = "./INP_transitions_initial_probs/20_7_2026_initial_probs.npz"

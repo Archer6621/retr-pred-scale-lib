@@ -6,10 +6,11 @@ import numpy as np
 import math
 
 from INP_idf_functions.getdata_functions_building import get_floor_plan_orientation
-
+from niemann import nieman_data
 """Modify geometry information in the case that the building unit corresponds to an apartment."""
 def modify_apartment_geometry(bag_pand_id, bag_num_floor, n_num_floor, nieman_path, bag_vertices, n_archetype, pp_ht_floor, n_total_floor_area, pp_compactness_ratio):
-    
+
+
     """In buildings that have more than one apartment per floor (e.g. gallery houses), we assume that all apartments are aligned in the longest side of the building. 
     This boolean will be set to True if there are more than one row of apartments in the short side of the building as well."""
     bool_ad = False    
@@ -29,7 +30,6 @@ def modify_apartment_geometry(bag_pand_id, bag_num_floor, n_num_floor, nieman_pa
 """This function calculates how many apartments exist in each floor."""
 def get_ap_per_floor(bag_pand_id, bag_num_floor, n_num_floor, nieman_path):
 
-    nieman_data = pd.read_csv(nieman_path)
 
     """It calculates how many apartments exist in a building based on the number of instances of the same BAG Pand ID in the Nieman database."""
     count_instances = nieman_data [nieman_data ['BAG Pand ID']==f'["{bag_pand_id}"]'].shape[0]

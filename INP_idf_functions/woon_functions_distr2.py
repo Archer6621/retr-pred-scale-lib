@@ -3,10 +3,13 @@ import numpy as np
 import bisect
 import math
 import matplotlib.pyplot as plt
+from pathlib import Path
+import os
+
+file_path = Path(__file__).resolve().parent.parent
 
 def initialize_probs(probs_path):
-    
-    initial_probs = np.load(probs_path, allow_pickle=False)
+    initial_probs = np.load(os.path.join(file_path, probs_path), allow_pickle=False)
 
     df_probs_rwall = make_df_set_index(initial_probs, 'arr0', ["archetype", "building_year", "energy_label", "ins/non_ins", "prob"], 
                             ["archetype", "building_year", "energy_label"])
@@ -156,7 +159,7 @@ def get_ins_type_age(comp_index, df_probs_component, df_probs_ad_ins, df_probs_l
     year_distr[1:-5] = (probs_ad_ins_status[1]*probs_last_5_wall_status[0])/(len(year_distr[1:-5]))
     year_distr[-5:] = (probs_ad_ins_status[1]*probs_last_5_wall_status[1])/5
     
-    ageing_factor = np.load("./INP_transitions_initial_probs/09_12_2025_init_ageing_factor_ins.npz")    
+    ageing_factor = np.load(file_path / "INP_transitions_initial_probs" / "09_12_2025_init_ageing_factor_ins.npz")    
     age_factor = ageing_factor["arr0"]
     while len(age_factor) < len(year_distr):
         age_factor = np.append(age_factor, age_factor[-1])
@@ -189,7 +192,7 @@ def get_transitions_year(transition_matrix, age):
 
 def get_expected_transitions(year_distr, comp):
 
-    transitions = np.load("./INP_transitions_initial_probs/09_12_2025_degrad_probs_ins.npz", allow_pickle=False)
+    transitions = np.load(file_path / "INP_transitions_initial_probs"/"09_12_2025_degrad_probs_ins.npz", allow_pickle=False)
     transition_matrix = transitions["arr0"]    
 
     n_years = len(year_distr)

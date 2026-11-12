@@ -22,6 +22,7 @@ def make_enriched_idf(idf, building, records):
         building.hp_cop = record['hp_cop']
         building.modify_idf(idf)
         idf.save()
+        return idf
 
         # Make idf for cooling
         new_idf_filename = f'{building.bag_adres_id}cooling_sample{i}.idf'

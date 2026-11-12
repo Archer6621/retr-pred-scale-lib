@@ -6,7 +6,7 @@ import numpy as np
 import ast
 
 from geomeppy import IDF
-
+from pathlib import Path
 
 """This function creates a new IDF file for the building geometry.
 Input: floor coordinates, building height, and number of floors."""
@@ -16,7 +16,8 @@ def create_idf(bag_adres_id, vertices, building_height, floor_number, output_dir
     iddfile  = "C:/EnergyPlusV23-1-0/Energy+.idd"
     IDF.setiddname(iddfile)
     
-    template_idf_path = 'template_idf.idf' # empty template IDF file
+
+    template_idf_path = Path(__file__).resolve().parent / 'template_idf.idf' # empty template IDF file
     
     # Copy empty template to create new IDF for the simulation
     new_idf_filepath = copy_template_building_idf(template_idf_path, output_dir, bag_adres_id) 

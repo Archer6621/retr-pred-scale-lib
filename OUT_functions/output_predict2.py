@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import joblib
+
 import torch
 from torch import nn
 
@@ -9,6 +10,9 @@ import torch.optim as optim
 
 import json
 from pathlib import Path
+
+file_path = Path(__file__).resolve().parent.parent
+
 
 def load_models():
 
@@ -56,7 +60,7 @@ def load_models():
             return y
         
     ## NN heating demand 
-    heat_dem_checkp = torch.load("./OUT_models/Heating demand/pred_heat_dem_bestmape.pth", map_location="cpu")
+    heat_dem_checkp = torch.load(file_path / "OUT_models"/"Heating demand"/"pred_heat_dem_bestmape.pth", map_location="cpu")
     heat_cfg = heat_dem_checkp["model_config"]
 
     model_heat_dem_pred = NeuralNet_3_Ln_2DBottleneck(
@@ -71,11 +75,11 @@ def load_models():
     model_heat_dem_pred.to("cpu")
     model_heat_dem_pred.eval()
 
-    input_scaler_heatdem = joblib.load("./OUT_models/Heating demand/pred_heat_dem_input_scaler.pkl")
-    output_scaler_heatdem = joblib.load("./OUT_models/Heating demand/pred_heat_dem_output_scaler.pkl")
+    input_scaler_heatdem = joblib.load(file_path / "OUT_models"/"Heating demand"/"pred_heat_dem_input_scaler.pkl")
+    output_scaler_heatdem = joblib.load(file_path / "OUT_models"/"Heating demand"/"pred_heat_dem_output_scaler.pkl")
 
     ## NN cooling demand
-    cool_dem_checkp = torch.load("./OUT_models/Cooling demand/pred_cool_dem_finalstate.pth", map_location="cpu")
+    cool_dem_checkp = torch.load(file_path / "OUT_models"/"Cooling demand"/"pred_cool_dem_finalstate.pth", map_location="cpu")
     cool_cfg = cool_dem_checkp["model_config"]
 
     model_cool_dem_pred = NeuralNet_3_Ln_2DBottleneck(
@@ -90,14 +94,14 @@ def load_models():
     model_cool_dem_pred.to("cpu")
     model_cool_dem_pred.eval()
 
-    input_scaler_cooldem = joblib.load("./OUT_models/Cooling demand/pred_cool_dem_input_scaler.pkl")
-    output_scaler_cooldem = joblib.load("./OUT_models/Cooling demand/pred_cool_dem_output_scaler.pkl")
+    input_scaler_cooldem = joblib.load(file_path / "OUT_models"/"Cooling demand"/"pred_cool_dem_input_scaler.pkl")
+    output_scaler_cooldem = joblib.load(file_path / "OUT_models"/"Cooling demand"/"pred_cool_dem_output_scaler.pkl")
     
     # Regression cooling consumption
-    model_poly3_elec_cool_regr = joblib.load('./OUT_models/Regression/model_poly3_elec_cool_regr.joblib')
+    model_poly3_elec_cool_regr = joblib.load(file_path / "OUT_models"/"Regression"/"model_poly3_elec_cool_regr.joblib")
 
     ## NN underheating, overheating
-    over_under_checkp = torch.load("./OUT_models/Comfort/pred_comfort_bestmapeover_5848.pth", map_location="cpu")
+    over_under_checkp = torch.load(file_path / "OUT_models"/"Comfort"/"pred_comfort_bestmapeover_5848.pth", map_location="cpu")
     over_under_cfg = over_under_checkp["model_config"]
 
     model_over_under_pred = NeuralNet_3_Ln_2DBottleneck(
@@ -111,14 +115,14 @@ def load_models():
     model_over_under_pred.to("cpu")
     model_over_under_pred.eval()
 
-    input_scaler_over_under = joblib.load("./OUT_models/Comfort/pred_comfort_input_scaler_5848.pkl")
-    output_scaler_over_under = joblib.load("./OUT_models/Comfort/pred_comfort_output_scaler_5848.pkl")
+    input_scaler_over_under = joblib.load(file_path / "OUT_models"/"Comfort"/"pred_comfort_input_scaler_5848.pkl")
+    output_scaler_over_under = joblib.load(file_path / "OUT_models"/"Comfort"/"pred_comfort_output_scaler_5848.pkl")
 
     return model_heat_dem_pred, input_scaler_heatdem, output_scaler_heatdem, model_cool_dem_pred, input_scaler_cooldem, output_scaler_cooldem, model_poly3_elec_cool_regr, model_over_under_pred, input_scaler_over_under, output_scaler_over_under
 
 def predict_heating(df, model, input_scaler, output_scaler, device="cpu"):
     
-    meta_path = "./OUT_models/Heating demand/pred_heat_dem_bestmape_meta.json"
+    meta_path = file_path / "OUT_models"/"Heating demand"/"pred_heat_dem_bestmape_meta.json"
     with open(meta_path, "r", encoding="utf-8") as f:
         meta = json.load(f)
     numeric_scaled = input_scaler.transform(df[meta["numeric_columns"]])
@@ -139,7 +143,7 @@ def predict_heating(df, model, input_scaler, output_scaler, device="cpu"):
 
 def predict_cooling(df, model, input_scaler, output_scaler, device="cpu"):
     
-    meta_path = "./OUT_models/Cooling demand/pred_cool_dem_finalstate_meta.json"
+    meta_path = file_path / "OUT_models"/"Cooling demand"/"pred_cool_dem_finalstate_meta.json"
     with open(meta_path, "r", encoding="utf-8") as f:
         meta = json.load(f)
     numeric_scaled = input_scaler.transform(df[meta["numeric_columns"]])
@@ -161,7 +165,7 @@ def predict_cooling(df, model, input_scaler, output_scaler, device="cpu"):
 
 def predict_overheat_underheat(df, model, input_scaler, output_scaler, device="cpu"):
     
-    meta_path = "./OUT_models/Comfort/pred_comfort_bestmapeover_5848_meta.json"
+    meta_path = file_path / "OUT_models"/"Comfort"/"pred_comfort_bestmapeover_5848_meta.json"
     with open(meta_path, "r", encoding="utf-8") as f:
         meta = json.load(f)
     numeric_scaled = input_scaler.transform(df[meta["numeric_columns"]])

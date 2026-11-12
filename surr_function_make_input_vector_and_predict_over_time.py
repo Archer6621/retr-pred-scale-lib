@@ -1,10 +1,13 @@
 import os
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from torch import seed
 from gen_building_class import Building
 from OUT_functions.output_predict2 import load_models, predict_heating, heating_consumption, predict_cooling, cooling_consumption, predict_overheat_underheat
 from INP_idf_functions.woon_functions_distr2 import map_archetype, get_transitions_year, calc_u_glazing
+
+root_path = Path(__file__).parent
 
 def function_make_input_vector_and_predict_over_time(idf, building, records, building_lifetime_ahead, retrofit_plan):
 
@@ -16,10 +19,10 @@ def function_make_input_vector_and_predict_over_time(idf, building, records, bui
     dh_coeff = 0.14
 
     # Load transition matrices
-    transitions = np.load("./INP_transitions_initial_probs/09_12_2025_degrad_probs_ins.npz", allow_pickle=False)
+    transitions = np.load(root_path /"INP_transitions_initial_probs"/"09_12_2025_degrad_probs_ins.npz", allow_pickle=False)
     transition_matrix = transitions["arr0"]
 
-    HVAC_trans = np.load("./INP_transitions_initial_probs/12_05_2026_probs_deg_HVAC70.npz")
+    HVAC_trans = np.load(root_path / "INP_transitions_initial_probs"/"12_05_2026_probs_deg_HVAC70.npz")
     p_boiler_surv = HVAC_trans["arr0"]
     p_ac_surv = HVAC_trans["arr1"]
     p_htpump_surv = HVAC_trans["arr2"]

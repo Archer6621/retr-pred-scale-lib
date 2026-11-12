@@ -7,6 +7,10 @@ from INP_idf_functions.woon_functions_distr2 import map_building_year, map_arche
 from INP_idf_functions.woon_functions_distr2 import get_ins_type_age, glaz_type_age, total_degrad_insulation_distr
 from INP_idf_functions.woon_functions_distr2 import get_heat_system_type_age, get_cool_system_type_age, total_u_glazing_distr, get_expected_transitions
 from INP_idf_functions.woon_functions_distr2 import get_degradation_heat_system, get_degradation_cool_system, apply_retrofit_action, get_expected_mean_degradation
+from pathlib import Path
+
+file_path = Path(__file__).resolve().parent.parent
+
 
 def get_geometric_data(bag_pand_id):
 
@@ -98,7 +102,7 @@ def get_samples(rows, n_sim):
 
 def sample_ageing_one_year(building_life, year):
 
-    ageing_factor = np.load("./INP_transitions_initial_probs/09_12_2025_init_ageing_factor_ins.npz")    
+    ageing_factor = np.load(file_path / "INP_transitions_initial_probs"/"09_12_2025_init_ageing_factor_ins.npz")    
     age_factor = ageing_factor["arr0"]
     while len(age_factor) <= building_life:
             age_factor = np.append(age_factor, age_factor[-1])

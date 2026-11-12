@@ -9,11 +9,11 @@ import urllib.request
 import json
 
 from sklearn.decomposition import PCA
+from niemann import nieman_data
 
 """Querying information at building unit level from the Nieman database."""
-def getNieman_data(bag_adres_id, source_path):
 
-    nieman_data = pd.read_csv(source_path)
+def getNieman_data(bag_adres_id, source_path):
     building_data = nieman_data[nieman_data['BAG Adres ID'] == bag_adres_id] # querying the data for the specific building unit
 
     bag_pand_id = building_data['BAG Pand ID'].values[0] 

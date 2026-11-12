@@ -10,7 +10,13 @@ from INP_idf_functions.modify_idf_for_simulation2 import add_ventilation_from_wi
 from INP_idf_functions.modify_idf_for_simulation2 import add_schedules, add_people_lighting_equipment, create_temperature_schedule_type_limits, add_output_variables, add_simulation_control, assign_constructions_to_surfaces, make_eplaunch_options
 from INP_idf_functions.modify_idf_for_simulation2 import add_heating_and_cooling_system
 from INP_idf_functions.get_retrofit_data2 import update_construction_materials, get_initial_r_values, get_retrofits
+from niemann import nieman_data
 
+building_model_cache = {}
+
+from pathlib import Path
+
+root_path = Path(__file__).parent
 """Main code file to run the Energyplus simulation"""
 
 class Building:
@@ -76,14 +82,12 @@ class Building:
         self.cool_setp = 24
         self.ventilation_rate = 0.0009
         self.batch_number = 0
-        self.output_dir = './simulation_files'
+        self.output_dir = root_path / 'simulation_files'
         self.watts_per_zone = 2 # Watts per zone floor area for lighting and equipment
         self.boiler_eff, self.hp_cop, self.dx_cop = 0.95, 5, 4  
 
     """Querying bag_adres_id from bag_pand_id using Nieman database"""
     def get_bag_adres_id(self, bag_pand_id):
-
-        nieman_data = pd.read_csv(self.nieman_path)
         building_data = nieman_data[nieman_data['BAG Pand ID'] == bag_pand_id] # querying the data for the specific building unit
 
         bag_adres_id = building_data['BAG Adres ID'].values[0] if not building_data.empty else None
@@ -91,18 +95,16 @@ class Building:
         return bag_adres_id  
 
     def load_building_data(self, bag_adres_id): 
-
         self.bag_adres_id = bag_adres_id   
-        """Querying information at building unit level from the Nieman database."""
+        """Querying information at building unit level from the Nieman database."""  # This is slow!
         self.bag_pand_id, self.n_archetype, self.n_building_year, self.n_energy_label, self.n_num_floor, self.n_total_floor_area = getNieman_data(self.bag_adres_id, self.nieman_path)
-        
         """Querying information at *building* (not building unit) level from the 3DBAG database."""
-        self.bag_ground_floor_area, self.bag_area_walls_exp, self.bag_area_walls_adiab, self.bag_vertices, self.bag_building_height, self.bag_num_floor, self.bag_roof_type = get3DBAG_data(ast.literal_eval(self.bag_pand_id)[0]) # Uses the numeric ID from the string
-
+        if bag_adres_id not in building_model_cache:
+            building_model_cache[bag_adres_id] = get3DBAG_data(ast.literal_eval(self.bag_pand_id)[0])
+        self.bag_ground_floor_area, self.bag_area_walls_exp, self.bag_area_walls_adiab, self.bag_vertices, self.bag_building_height, self.bag_num_floor, self.bag_roof_type = building_model_cache[bag_adres_id] # Uses the numeric ID from the string
         """Post-processing the data to extract other information."""
         self.pp_ht_floor, self.pp_compactness_ratio, self.pp_orientation = getpp_data(self.bag_vertices, self.bag_building_height, self.bag_num_floor, self.bag_area_walls_exp, self.bag_ground_floor_area, self.n_total_floor_area)
-
-        """If the archetype corresponds to an apartment, then the geometry is modified."""
+        """If the archetype corresponds to an apartment, then the geometry is modified."""  # This is also slow!
         if self.n_archetype in [2, 3, 4, 5, 9, 10, 11, 12, 15, 16, 17, 18, 19, 20]:
             self.bag_area_walls_exp, self.bag_area_walls_adiab, self.bag_ground_floor_area, self.pp_orientation, self.pp_compactness_ratio, self.bool_ad = modify_apartment_geometry(self.bag_pand_id, self.bag_num_floor, self.n_num_floor, self.nieman_path, self.bag_vertices, self.n_archetype, self.pp_ht_floor, self.n_total_floor_area, self.pp_compactness_ratio)
 
@@ -154,7 +156,7 @@ class Building:
 
     def modify_idf(self, idf):
 
-        ddypath = "./INP_epw_file/NLD_ZH_Rotterdam.The.Hague.AP.063440_TMYx.2009-2023.ddy"   
+        ddypath = root_path / "INP_epw_file"/ "NLD_ZH_Rotterdam.The.Hague.AP.063440_TMYx.2009-2023.ddy"   
         add_location_design_days(idf, ddypath) # Specify location, design days, run period and ground temperatures
         add_year_long_run_period(idf)
 
@@ -184,7 +186,7 @@ class Building:
 
     def get_heating_cooling_multi_energy_source(self, idf):
 
-        csv_path_energy = f"./simulation_files/{self.batch_number}/Outputs/{self.bag_adres_id}Table.csv"
+        csv_path_energy = root_path / "simulation_files" / f"{self.batch_number}" / "Outputs" / f"{self.bag_adres_id}Table.csv"
 
         if os.path.exists(csv_path_energy):
             results_new = pd.read_csv(csv_path_energy, header=None, names=range(12))
@@ -215,8 +217,8 @@ class Building:
 
         self.heating_dem_m2 = heating_m2
         self.cooling_dem_m2 = cooling_m2
-    
-        csv_path_meter = f"./simulation_files/{self.batch_number}/Outputs/{self.bag_adres_id}Meter.csv"
+        
+        csv_path_meter = root_path / "simulation_files" / f"{self.batch_number}"/"Outputs"/f"{self.bag_adres_id}Meter.csv"
 
         if os.path.exists(csv_path_meter):
             results_meter = pd.read_csv(csv_path_meter, header=None)
@@ -241,7 +243,7 @@ class Building:
 
     def get_comfort(self, idf):
         df_run_means = pd.read_csv("running_means_limit.csv")
-        csv_path_comfort = f"./simulation_files/{self.batch_number}/Outputs/{self.bag_adres_id}.csv"
+        csv_path_comfort = root_path / "simulation_files"/f"{self.batch_number}"/"Outputs"/f"{self.bag_adres_id}.csv"
 
         surfaces = idf.idfobjects['BUILDINGSURFACE:DETAILED']
         floors = [surface for surface in surfaces if surface.Surface_Type =='floor']
